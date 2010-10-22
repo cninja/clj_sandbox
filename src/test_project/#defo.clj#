@@ -51,6 +51,7 @@
 	   (if (seq? body)
 	     (condp = (func-name body)
 		 "loop" body
+		 "fn" body
 		 "recur" (let [[norm rest] (split-at num body)]
 			   (if (seq? rest)
 			     (concat norm (list (conj rest 'list)))

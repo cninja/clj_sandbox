@@ -1,4 +1,5 @@
 (ns test-project.core)
+(use 'test-project.defo)
 ;99 Lisp Problems
 ;P01
 (defn p01
@@ -150,38 +151,122 @@
        (let [f (first coll)]
 	 (p14 (conj (conj ans f) f) (rest coll)))
        ans)))
-defn p14
-  "Duplicate the elements of a list"
-  ([coll] p14( [] seq(coll)))
-  ([ans coll]
-     if seq(coll)
-       let [f first(coll)]
-	 p14(conj(conj(ans f) f) rest(coll))
-       ans)
 (p14 [:a :b :c :c :d])
 
 (defo p15
   "Replicate the elements of a list a given number of times"
   [coll num (ans [])]
-  (if coll
-    (do  (println "calling "(next  coll) num (concat ans  (take num (repeat (first coll)))))
-	 (recur (next coll) num (concat ans (take num (repeat (first coll))))))
+  (if (seq coll)
+    (recur (rest coll) num (concat ans (take num (repeat (first coll)))))
     (vec  ans)))
-(defn p15
-  [coll & rest]
-  (let [[ans] rest]
-    (if coll
-      (recur (next coll) (conj ans (first coll)))
-      ans)))
-(p15 [:a :b :c :c :d] [])
-defn p15
-  [coll & rest]
-  let [[ans] rest]
-    if coll
-      (recur(next coll) (conj ans (first coll)))
-      ans
+(p15 [:a :b :c :c :d] 3)
 
-(count [:a :b])
+(defo p16
+  "Drop every nth element from a list"
+  [coll num (ans '())]
+  (if (seq coll)
+    (recur (nthnext coll num) num (concat ans (take (dec num) coll)))
+    (vec ans))
+  )
+(p16 [:a :b :c :d :e :f :g :h :i :k] 3)
+
+(defo p17
+  "Split a list into two parts"
+  [coll num (front [])]
+  (if (pos? num)
+    (recur (next coll) (dec num) (conj front (first coll)))
+    [front (vec coll)]))
+(p17 [:a :b :c :d :e :f :g :h :i :k] 3)
+
+(defn p18
+  "Extract a slice"
+  [coll i j]
+  (take (- j i) (drop i coll)) )
+(p18 [:a :b :c :d :e :f :g :h :i :k] 3 7)
+
+(defn p19
+  "Rotate a list N places to the left"
+  [coll n]
+  (let [n (if (pos? n) n (+ (count coll) n))
+	[front back] (split-at n coll)]
+    (vec (concat back front))))
+(p19 [:a :b :c :d :e :f :g :h :i :k] 3)
+(p19 [:a :b :c :d :e :f :g :h :i :k] -2)
+
+(defn p20
+  "Remove the K'th element from a list"
+  [coll n]
+  (let [[front back] (split-at (dec n) coll)]
+       (vec (concat front (rest back)))))
+(p20 [:a :b :c :d] 2)
+
+(defn p21
+  "Insert an element at a given position"
+  [e coll n]
+  (let [[front back] (split-at (dec n) coll)]
+    (vec (concat front (conj back e)))))
+(p21 :alfa [:a :b :c :d] 2)
+
+(defo p22
+  "Create a range"
+  [i j (ans [])]
+  (if (<= i j)
+    (recur (inc i) j (conj ans i))
+    ans))
+(p22 4 9)
+
+
+(defn inc-from
+  [i]
+  (lazy-cat [i] (inc-from (inc i))))
+(take 5 (inc-from 7))
+
+(defn inc-from-seq
+  [i]
+  (lazy-seq (cons i (inc-from-seq (inc i)) )))
+(take 5 (inc-from-seq 7))
+
+(defn distinct
+  "Returns a lazy sequence of the elements of coll with duplicates removed"
+  {:added "1.0"}
+  [coll]
+    (let [step (fn step [xs seen]
+                   (lazy-seq
+                    ((fn [[f :as xs] seen]
+                      (when-let [s (seq xs)]
+                        (if (contains? seen f) 
+                          (recur (rest s) seen)
+                          (cons f (step (rest s) (conj seen f))))))
+                     xs seen)))]
+      (step coll #{})))
+(defo distinct2
+  [coll (seen #{})]
+  (lazy-seq
+   (when-let [s (seq coll)]
+     (let [f (first coll)]
+       (if (contains? seen f)
+	 (recur (rest s) seen)
+	 (cons f (distinct2 (rest s) (conj seen f))))))))
+(defn distinct3
+  [coll]
+  (lazy-seq
+   ((fn step [[f :as xs] seen]
+       (if (seq xs)
+	 (if (contains? seen f)
+	   (recur (rest xs) seen)
+	   (cons f (step (rest xs) (conj seen f))))))
+    coll #{})))
+(do
+  (time (dotimes [n 10000000] (distinct3 [:a :b :c :a :b :d :d :b :e :a :f])))
+  (time (dotimes [n 10000000] (distinct [:a :b :c :a :b :d :d :b :e :a :f])))
+  (time (dotimes [n 10000000] (distinct3 [:a :b :c :a :b :d :d :b :e :a :f])))
+  (time (dotimes [n 10000000] (distinct [:a :b :c :a :b :d :d :b :e :a :f])))
+  (time (dotimes [n 10000000] (distinct3 [:a :b :c :a :b :d :d :b :e :a :f])))
+  (time (dotimes [n 10000000] (distinct [:a :b :c :a :b :d :d :b :e :a :f])))
+  (time (dotimes [n 10000000] (distinct3 [:a :b :c :a :b :d :d :b :e :a :f])))
+  (time (dotimes [n 10000000] (distinct [:a :b :c :a :b :d :d :b :e :a :f])))
+  (time (dotimes [n 10000000] (distinct3 [:a :b :c :a :b :d :d :b :e :a :f])))
+  (time (dotimes [n 10000000] (distinct [:a :b :c :a :b :d :d :b :e :a :f]))))
 
 (defn func-named
   [do-recur & rest]
