@@ -10,7 +10,7 @@
 	   (cons f (step (rest xs) (conj seen f))))))
     coll #{})))
 
-(def l (repeat 1000000 [:a :b :c :a :b :d :d :b :e :a :f]))
+(def l (take 1000000 (cycle [:a :b :c :a :b :d :d :b :e :a :f])))
 (do
   (println "start")
   (time (dotimes [n 1000000] (distinct3 l)))
@@ -25,3 +25,4 @@
   (time (dotimes [n 1000000] (distinct l)))
 
   )
+(println (distinct3 l))
