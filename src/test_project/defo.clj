@@ -1,5 +1,3 @@
-(ns test-project.defo)
-(use 'clojure.contrib.def)
 (defmacro defo
   [fn-name & fn-tail]
   (letfn [(add-if [sym def] `(~sym (if (nil? ~sym) ~def ~sym)))
